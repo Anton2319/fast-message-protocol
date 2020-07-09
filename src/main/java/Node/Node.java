@@ -1,8 +1,13 @@
 package Node;
 
+//import netscape.javascript.JSObject;
+import org.json.JSONObject;
+
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.sql.ResultSet;
+import java.util.ArrayList;
 import java.util.Properties;
 
 public class Node extends Thread {
@@ -39,9 +44,27 @@ public class Node extends Thread {
                 OutputStream output = socket.getOutputStream();
                 BufferedReader reader = new BufferedReader(new InputStreamReader(input));
                 PrintWriter writer = new PrintWriter(output, true);
+                if(reader.readLine().equals("getuserbyid")) {
+                    int userid = Integer.parseInt(reader.readLine());
+                    ArrayList<String[]> line = db.query("SELECT * FROM `users` WHERE id = "+userid);
+                    String username = null;
+                    String public_key = null;
+                    String wall_id = null;
+
+                    username = line.get(0)[0];
+                    public_key = line.get(0)[2];
+                    wall_id = line.get(0)[1];
+
+                    JSONObject jsonObject = new JSONObject();
+                    jsonObject.put("public_key", public_key);
+                    jsonObject.put("username", username);
+                    jsonObject.put("wall_id", wall_id);
+                    writer.println(JSONObject.quote(jsonObject.toString()));
+                }
                 if(reader.readLine().equals("test")) {
                     writer.println(ServerInfo.getServerInfo(showOS, showLocaltime, port));
                     socket.close();
+                    continue;
                 }
             }
         } catch (Exception e) {
