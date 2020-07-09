@@ -60,6 +60,8 @@ public class Node extends Thread {
                     jsonObject.put("username", username);
                     jsonObject.put("wall_id", wall_id);
                     writer.println(JSONObject.quote(jsonObject.toString()));
+                    socket.close();
+                    continue;
                 }
                 if(reader.readLine().equals("test")) {
                     writer.println(ServerInfo.getServerInfo(showOS, showLocaltime, port));
