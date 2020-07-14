@@ -6,8 +6,9 @@ import org.json.JSONObject;
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.sql.ResultSet;
 import java.util.ArrayList;
+import java.util.Map;
+import java.util.Optional;
 import java.util.Properties;
 
 public class Node extends Thread {
@@ -37,37 +38,36 @@ public class Node extends Thread {
         try {
             ServerSocket serverSocket = new ServerSocket(port);
             DBConnector db = new DBConnector(url, user, password);
-            System.out.println("Node started at port "+port);
+            System.out.println("Node started at port " + port);
             while(true) {
-                Socket socket = serverSocket.accept();
-                InputStream input = socket.getInputStream();
-                OutputStream output = socket.getOutputStream();
-                BufferedReader reader = new BufferedReader(new InputStreamReader(input));
-                PrintWriter writer = new PrintWriter(output, true);
-                if(reader.readLine().equals("getuserbyid")) {
-                    int userid = Integer.parseInt(reader.readLine());
-                    ArrayList<String[]> line = db.query("SELECT * FROM `users` WHERE id = "+userid);
-                    String username = null;
-                    String public_key = null;
-                    String wall_id = null;
+                try(Socket socket = serverSocket.accept()){
+                    BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+                    PrintWriter writer = new PrintWriter(socket.getOutputStream(), true);
+                    String command = reader.readLine();
+                    switch (command) {
+                        case "getuserbyid":
+                            int userid = Integer.parseInt(reader.readLine());
+                            ArrayList<Map<String, String>> line = db.query("SELECT username, wall_id, public_key FROM `users` WHERE id = " + userid);
 
-                    username = line.get(0)[0];
-                    public_key = line.get(0)[2];
-                    wall_id = line.get(0)[1];
+                            String username = DBConnector.getRowValue(line, "username")
+                                    .orElseThrow(() -> new RuntimeException("Cannot find user by id = " + userid));
 
-                    JSONObject jsonObject = new JSONObject();
-                    jsonObject.put("public_key", public_key);
-                    jsonObject.put("username", username);
-                    jsonObject.put("wall_id", wall_id);
-                    writer.println(JSONObject.quote(jsonObject.toString()));
-                    socket.close();
-                    continue;
+                            JSONObject jsonObject = new JSONObject();
+                            jsonObject.put("username", username);
+                            DBConnector.getRowValue(line, "wall_id")
+                                    .ifPresent(v -> jsonObject.put("wall_id", v));
+                            DBConnector.getRowValue(line, "public_key")
+                                    .ifPresent(v -> jsonObject.put("public_key", v));
+                            writer.println(JSONObject.quote(jsonObject.toString()));
+                            break;
+                        case "test":
+                            writer.println(ServerInfo.getServerInfo(showOS, showLocaltime, port));
+                            break;
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
                 }
-                if(reader.readLine().equals("test")) {
-                    writer.println(ServerInfo.getServerInfo(showOS, showLocaltime, port));
-                    socket.close();
-                    continue;
-                }
+
             }
         } catch (Exception e) {
             System.out.println("Cannot start node");
@@ -75,4 +75,6 @@ public class Node extends Thread {
             System.exit(1);
         }
     }
+
+
 }
