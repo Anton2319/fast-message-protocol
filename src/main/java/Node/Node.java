@@ -1,6 +1,5 @@
 package Node;
 
-//import netscape.javascript.JSObject;
 import org.json.JSONObject;
 
 import java.io.*;
@@ -60,6 +59,26 @@ public class Node extends Thread {
                                     .ifPresent(v -> jsonObject.put("public_key", v));
                             writer.println(JSONObject.quote(jsonObject.toString()));
                             break;
+                        case "send":
+                            int destination = Integer.parseInt(reader.readLine());
+                            String message = reader.readLine();
+                            int sender = Integer.parseInt(reader.readLine());
+                            db.queryUpdate("INSERT INTO `messages` (`sender`, `destination`, `message`) VALUES ("+sender+","+destination+",'"+message+"')");
+                            break;
+                        case "get":
+                            int receiver = Integer.parseInt(reader.readLine());
+                            ArrayList<Map<String, String>> result = db.query("SELECT `sender`, `destination`, `message` FROM `messages` WHERE destination="+receiver);
+                            for (final Map<String, String> element : result) {
+                                for (final Map.Entry<String, String> entryElem : element.entrySet()) {
+                                    JSONObject messageJson = new JSONObject();
+                                    DBConnector.getRowValue(result, "sender")
+                                            .ifPresent(v -> messageJson.put("sender", v));
+                                    DBConnector.getRowValue(result, "message")
+                                            .ifPresent(v -> messageJson.put("message", v));
+                                    writer.println(JSONObject.quote(messageJson.toString()));
+                                }
+                            }
+                            break;
                         case "test":
                             writer.println(ServerInfo.getServerInfo(showOS, showLocaltime, port));
                             break;
@@ -67,7 +86,6 @@ public class Node extends Thread {
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
-
             }
         } catch (Exception e) {
             System.out.println("Cannot start node");

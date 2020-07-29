@@ -19,6 +19,7 @@ public class DBConnector {
 
     public ArrayList<Map<String, String>> query(String query) throws SQLException {
         ArrayList<Map<String, String>> line = new ArrayList<>();
+        // Death ladder
         try (Connection con = DriverManager.getConnection(url, user, password)) {
             try(Statement stmt = con.createStatement()) {
                 try(ResultSet rs = stmt.executeQuery(query)) {
@@ -33,6 +34,21 @@ public class DBConnector {
                         line.add(row);
                     }
                     return line;
+                }
+            }
+        }
+    }
+    public void queryUpdate(String query) throws SQLException {
+        try (Connection con = DriverManager.getConnection(url, user, password)) {
+            try(Statement stmt = con.createStatement()) {
+                try {
+                    stmt.executeUpdate(query);
+                }
+                catch (Exception e) {
+                    e.printStackTrace();
+                }
+                finally {
+                    stmt.close();
                 }
             }
         }
