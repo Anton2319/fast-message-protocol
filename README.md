@@ -10,8 +10,11 @@ Get all messages for your id from server. Returns a JSON with sender id, destina
 
 ### Example: 
 Client: get
+
 Client: 0
+
 Server: "{\"sender\":\"1\",\"message\":\"This is a test message!\"}"
+
 Connection ends.
 
 ## send
@@ -21,9 +24,13 @@ Send a message to server. You need to specify destination id,
 ### Example:
 
 Client: send
+
 Client: 1
+
 Client: This is an another test message
+
 Client: 0
+
 Connection ends.
 
 # And how about message encrypting?
