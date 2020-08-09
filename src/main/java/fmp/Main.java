@@ -1,9 +1,9 @@
-package freesocial;
+package fmp;
 
 public class Main {
 
     public static void main(String[] args) {
-        Node.Node node = new Node.Node();
+        node.Node node = new node.Node();
         node.start();
     }
 }

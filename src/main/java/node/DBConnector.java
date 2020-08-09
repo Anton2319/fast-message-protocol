@@ -1,4 +1,4 @@
-package Node;
+package node;
 
 import java.sql.*;
 import java.util.ArrayList;
